@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>💌 一封给你的信</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body {
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+  background:linear-gradient(160deg,#ffe3ee 0%,#f3d9ff 45%,#dbe9ff 100%);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  user-select:none;
+}
+
+/* ---------- 舞台（三幕） ---------- */
+.stage {
+  position:fixed; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:20px;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .55s ease, visibility .55s;
+  z-index:1;
+}
+.stage.visible { opacity:1; visibility:visible; pointer-events:auto; }
+
+/* ---------- 第一幕：信封 ---------- */
+.envelope {
+  position:relative; width:min(400px,86vw); height:240px;
+  cursor:pointer; animation:bob 2.6s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,100% { transform:translateY(0) rotate(-1deg); }
+  50%     { transform:translateY(-10px) rotate(1deg); }
+}
+.env-body {
+  position:absolute; inset:0; border-radius:14px;
+  background:linear-gradient(160deg,#ffc1d8,#f797ba);
+  box-shadow:0 18px 40px rgba(190,80,130,.35);
+}
+.env-letter-peek {
+  position:absolute; left:7%; right:7%; top:9%; height:88%;
+  background:#fffdf4; border-radius:8px; z-index:1;
+  display:flex; align-items:center; justify-content:center; font-size:38px;
+  transition:transform .8s cubic-bezier(.22,.9,.3,1.1);
+}
+.env-front {
+  position:absolute; inset:0; border-radius:14px; z-index:2;
+  background:linear-gradient(160deg,#f9a8c3,#f0739f);
+  clip-path:polygon(0 0,50% 54%,100% 0,100% 100%,0 100%);
+}
+.env-flap {
+  position:absolute; top:0; left:0; right:0; height:56%; z-index:3;
+  background:linear-gradient(180deg,#e8658f,#d94f7c);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  border-radius:14px 14px 0 0;
+  transform-origin:top center;
+  transition:transform .75s ease;
+}
+.env-stamp {
+  position:absolute; top:14px; right:16px; width:50px; height:58px; z-index:4;
+  background:linear-gradient(135deg,#ffe082,#ffca28);
+  border:2px dashed rgba(0,0,0,.18); border-radius:4px;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  transform:rotate(5deg); box-shadow:0 3px 8px rgba(0,0,0,.12);
+}
+.env-seal {
+  position:absolute; left:50%; top:56%; width:66px; height:66px; z-index:5;
+  transform:translate(-50%,-50%); border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ef5350,#b71c1c 70%);
+  color:#ffd; font-size:30px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 14px rgba(120,10,30,.4), inset 0 -4px 8px rgba(0,0,0,.25);
+  text-shadow:0 2px 3px rgba(0,0,0,.3);
+  transition:.5s;
+}
+.env-from {
+  position:absolute; right:16px; bottom:12px; z-index:6;
+  font-size:13px; color:#a13357; font-style:italic;
+}
+.envelope.open .env-flap { transform:rotateX(180deg); }
+.envelope.open .env-letter-peek { transform:translateY(-52%) scale(1.06); }
+.envelope.open .env-seal { opacity:0; transform:translate(-50%,-50%) scale(.7); }
+.env-hint {
+  margin-top:34px; font-size:16px; color:#a1446a;
+  animation:hintPulse 1.6s ease-in-out infinite;
+}
+@keyframes hintPulse { 0%,100%{opacity:.55;} 50%{opacity:1;} }
+
+/* ---------- 第二幕：信 ---------- */
+.paper {
+  width:min(560px,92vw); max-height:82vh; overflow:auto;
+  background:#fffdf4; border-radius:18px;
+  box-shadow:0 22px 50px rgba(170,70,120,.28);
+  padding:30px 26px 26px;
+}
+.paper-lines {
+  background-image:repeating-linear-gradient(transparent, transparent 31px, rgba(233,214,240,.7) 32px);
+  padding:2px 6px;
+}
+.letter-text {
+  white-space:pre-line; font-size:16.5px; line-height:32px;
+  color:#4a3a45; user-select:text;
+}
+.letter-sign { text-align:right; font-size:14.5px; color:#8a5f74; margin-top:14px; }
+.question {
+  text-align:center; font-weight:700; font-size:17px;
+  color:#6b4058; margin:22px 0 8px;
+}
+.choice-btn {
+  display:block; width:100%; padding:14px; margin:10px 0 0;
+  font-size:17px; font-weight:600; color:#fff; letter-spacing:1px;
+  border:none; border-radius:999px; cursor:pointer;
+  transition:transform .15s, filter .15s;
+}
+.choice-btn:active { transform:scale(.96); filter:brightness(1.06); }
+.btn-delta  { background:linear-gradient(135deg,#43a047,#2e7d32); box-shadow:0 6px 16px rgba(46,125,50,.35); }
+.btn-roco   { background:linear-gradient(135deg,#ab47bc,#7b1fa2); box-shadow:0 6px 16px rgba(123,31,162,.35); }
+.btn-refuse { background:#fdf2f4; color:#b3486a; border:2px dashed #e7a9bd; }
+
+/* ---------- 第三幕：结果 ---------- */
+.result-emoji { font-size:72px; animation:bob 2.2s ease-in-out infinite; }
+.result-text {
+  margin-top:22px; white-space:pre-line; text-align:center;
+  font-size:18px; line-height:1.9; color:#4a3a45;
+  background:rgba(255,253,244,.85); border-radius:18px;
+  padding:22px 26px; max-width:min(520px,90vw);
+  box-shadow:0 16px 40px rgba(170,70,120,.22);
+}
+.relink {
+  margin-top:26px; background:none; border:none;
+  color:#a1446a; font-size:14px; cursor:pointer; text-decoration:underline;
+}
+
+/* ---------- 对话框 ---------- */
+.dialog-backdrop {
+  position:fixed; inset:0; z-index:20;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(70,25,50,.45);
+  opacity:0; visibility:hidden; transition:.3s;
+}
+.dialog-backdrop.open { opacity:1; visibility:visible; }
+.dialog-card {
+  width:min(400px,88vw); background:#fffdf6;
+  border-radius:20px; padding:28px 24px 22px; text-align:center;
+  box-shadow:0 24px 60px rgba(60,20,40,.45);
+  transform:scale(.8) translateY(20px);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.dialog-backdrop.open .dialog-card { transform:scale(1) translateY(0); }
+.dialog-text { white-space:pre-line; font-size:16px; line-height:1.7; color:#4a3a45; }
+.dialog-btns { display:flex; gap:12px; margin-top:22px; }
+.btn {
+  flex:1; padding:13px 8px; font-size:15.5px; font-weight:600;
+  border:none; border-radius:999px; cursor:pointer; transition:transform .15s;
+}
+.btn:active { transform:scale(.96); }
+.btn-again { background:#eee5ea; color:#8a6a76; }
+.btn-back  { background:linear-gradient(135deg,#ec407a,#d81b60); color:#fff; box-shadow:0 6px 14px rgba(216,27,96,.35); }
+
+/* ---------- 漂浮爱心 & 彩带 ---------- */
+.heart {
+  position:fixed; bottom:-50px; z-index:0; opacity:0;
+  animation:floatUp linear infinite; pointer-events:none;
+}
+@keyframes floatUp {
+  0%   { transform:translate(0,0) rotate(-8deg); opacity:0; }
+  8%   { opacity:.55; }
+  90%  { opacity:.35; }
+  100% { transform:translate(var(--sway,20px),-118vh) rotate(14deg); opacity:0; }
+}
+#confetti { position:fixed; inset:0; pointer-events:none; z-index:15; }
+#confetti i {
+  position:absolute; top:-20px; display:block;
+  animation:fall linear infinite;
+}
+@keyframes fall { to { transform:translateY(115vh) rotate(720deg); } }
+</style>
+</head>
+<body>
+
+<!-- 第一幕：信封 -->
+<div class="stage visible" id="stage-envelope">
+  <div class="envelope" id="envelope">
+    <div class="env-body"></div>
+    <div class="env-letter-peek">💌</div>
+    <div class="env-front"></div>
+    <div class="env-flap"></div>
+    <div class="env-stamp">🎮</div>
+    <div class="env-seal">♥</div>
+    <div class="env-from">From：我</div>
+  </div>
+  <div class="env-hint" id="env-hint"></div>
+</div>
+
+<!-- 第二幕：信 -->
+<div class="stage" id="stage-letter">
+  <div class="paper">
+    <div class="paper-lines">
+      <div class="letter-text" id="letter-text"></div>
+      <div class="letter-sign" id="letter-sign"></div>
+    </div>
+    <div class="question">所以，你的选择是——</div>
+    <button class="choice-btn btn-delta"  id="btn-delta"></button>
+    <button class="choice-btn btn-roco"   id="btn-roco"></button>
+    <button class="choice-btn btn-refuse" id="btn-refuse"></button>
+  </div>
+</div>
+
+<!-- 第三幕：结果 -->
+<div class="stage" id="stage-result">
+  <div class="result-emoji" id="result-emoji"></div>
+  <div class="result-text"  id="result-text"></div>
+  <button class="relink" id="btn-relink">↩ 再选一次</button>
+</div>
+
+<!-- 狠心拒绝对话框 -->
+<div class="dialog-backdrop" id="dialog">
+  <div class="dialog-card">
+    <div class="dialog-text" id="dialog-text"></div>
+    <div class="dialog-btns">
+      <button class="btn btn-again" id="btn-again"></button>
+      <button class="btn btn-back"  id="btn-back"></button>
+    </div>
+  </div>
+</div>
+
+<div id="confetti"></div>
+
+<script>
+/* ================= ✏️ 编辑区（改这里就行，注意别删掉每段文字两边的反引号 ` ） ================= */
+const CONFIG = {
+
+  // 📮 想收到她的选择通知：
+  //    到 https://formspree.io 免费注册 → 新建表单 → 复制表单地址（形如 https://formspree.io/f/xxxxxxx）
+  //    粘贴到下面两个引号之间。留空 "" 页面也正常用，只是不通知你。
+  endpoint: "https://formspree.io/f/mqpeylkw",
+
+  // 信封下面的提示文字
+  envelopeHint: "👆 点击信封打开",
+
+  // ✍️ 信的内容（\n 是换行）
+  letter: "见字如面：\n\n有一个问题在我心里藏了好几天了，今天鼓起勇气问你——\n\n要不要和我一起打游戏呀？🎮\n\n我知道你可能会说没时间，也可能说不会玩，都没关系。我把选项都给你准备好了，你只需要点一下：",
+  signature: "—— 一个很想和你打游戏的人",
+
+  // 🎯 三个选项的文字
+  options: { delta: "🎯 三角洲行动", roco: "🐾 洛克王国", refuse: "💔 狠心拒绝" },
+
+  // 💬 点「狠心拒绝」后弹出的对话框
+  refuseDialog: {
+    text: "你……真的……要狠心拒绝我吗？🥺\n\n再给你一次机会，好好想想哦～",
+    again: "仍然狠心拒绝",
+    back: "返回",
+  },
+
+  // 🎉 最终结果页的文字
+  results: {
+    delta: "好耶！！🎉🎉\n走！三角洲行动，我带你起飞！",
+    roco: "好耶！！🎉🎉\n洛克王国！一起抓宠物、闯关卡！",
+    refuse: "好吧……🥲💔\n那我一个人默默去打游戏了。\n\n（如果你什么时候改变主意了，我随时都在）",
+  },
+};
+/* ================= 编辑区结束 ================= */
+
+const $ = (id) => document.getElementById(id);
+
+// 把编辑区的内容填进页面
+$("env-hint").textContent    = CONFIG.envelopeHint;
+$("letter-text").textContent = CONFIG.letter;
+$("letter-sign").textContent = CONFIG.signature;
+$("btn-delta").textContent   = CONFIG.options.delta;
+$("btn-roco").textContent    = CONFIG.options.roco;
+$("btn-refuse").textContent  = CONFIG.options.refuse;
+$("dialog-text").textContent = CONFIG.refuseDialog.text;
+$("btn-again").textContent   = CONFIG.refuseDialog.again;
+$("btn-back").textContent    = CONFIG.refuseDialog.back;
+
+const RESULT_META = {
+  delta:  { emoji: "🎮", confetti: true  },
+  roco:   { emoji: "🐾", confetti: true  },
+  refuse: { emoji: "💔", confetti: false },
+};
+
+// 把事件发给你的邮箱（endpoint 留空时静默跳过）
+function report(eventName, value) {
+  if (!CONFIG.endpoint) return;
+  fetch(CONFIG.endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      event: eventName,
+      value: value || "",
+      time: new Date().toLocaleString("zh-CN", { hour12: false }),
+    }),
+  }).catch(() => {});
+}
+
+function switchStage(id) {
+  document.querySelectorAll(".stage").forEach((s) => s.classList.remove("visible"));
+  $(id).classList.add("visible");
+}
+
+// 漂浮爱心背景
+(function spawnHearts() {
+  const emojis = ["♥", "💗", "💜", "💙", "🌸"];
+  for (let i = 0; i < 14; i++) {
+    const h = document.createElement("span");
+    h.className = "heart";
+    h.textContent = emojis[i % emojis.length];
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.fontSize = 12 + Math.random() * 22 + "px";
+    h.style.animationDuration = 9 + Math.random() * 8 + "s";
+    h.style.animationDelay = -Math.random() * 17 + "s";
+    h.style.setProperty("--sway", Math.random() * 80 - 40 + "px");
+    document.body.appendChild(h);
+  }
+})();
+
+// 彩带
+function confetti() {
+  const box = $("confetti");
+  box.innerHTML = "";
+  const colors = ["#ec407a", "#ffd54f", "#42a5f5", "#66bb6a", "#ffffff", "#ab47bc"];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement("i");
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.width = 6 + Math.random() * 7 + "px";
+    c.style.height = 8 + Math.random() * 8 + "px";
+    c.style.animationDuration = 2.6 + Math.random() * 2.4 + "s";
+    c.style.animationDelay = Math.random() * 1.8 + "s";
+    c.style.borderRadius = Math.random() > .5 ? "50%" : "2px";
+    box.appendChild(c);
+  }
+}
+
+// 打开信封
+let opened = false;
+$("envelope").addEventListener("click", () => {
+  if (opened) return;
+  opened = true;
+  report("opened", "她打开了信封");
+  $("envelope").classList.add("open");
+  setTimeout(() => switchStage("stage-letter"), 950);
+});
+
+// 三个选项
+$("btn-delta").onclick  = () => { report("choice", "三角洲行动"); showResult("delta"); };
+$("btn-roco").onclick   = () => { report("choice", "洛克王国"); showResult("roco"); };
+$("btn-refuse").onclick = () => $("dialog").classList.add("open");
+
+// 对话框
+$("btn-back").onclick = () => $("dialog").classList.remove("open");
+$("btn-again").onclick = () => {
+  $("dialog").classList.remove("open");
+  report("choice", "狠心拒绝");
+  showResult("refuse");
+};
+
+// 结果页
+function showResult(key) {
+  $("result-emoji").textContent = RESULT_META[key].emoji;
+  $("result-text").textContent  = CONFIG.results[key];
+  if (RESULT_META[key].confetti) confetti();
+  switchStage("stage-result");
+}
+$("btn-relink").onclick = () => switchStage("stage-letter");
+</script>
+</body>
+</html>
